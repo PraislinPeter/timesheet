@@ -5,7 +5,7 @@ from datetime import date, time
 # Input model for a timesheet entry
 class TimesheetEntryIn(BaseModel):
     employee_emp_no: str
-    trade_id: int
+    trade_id: Optional[int] = None
     from_time: time
     to_time: time
     break_minutes: Optional[int] = 0
@@ -43,7 +43,7 @@ class TimesheetEntryOut(BaseModel):
     id: int
     employee_emp_no: str
     employee_name: Optional[str]= None
-    trade_id: int
+    trade_id: Optional[int] = None
     trade_name: Optional[str]= None
     from_time: time
     to_time: time

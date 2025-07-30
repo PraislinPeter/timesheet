@@ -74,19 +74,19 @@ const TimesheetRow = ({ index, data, onChange }) => {
 
       {/* Name Dropdown */}
       <td>
-        <select
+        <input
+          list={`employee-list-${index}`}
           className="form-control"
           value={data.name}
           onChange={(e) => handleChange("name", e.target.value)}
-        >
-          <option value="">Select Name</option>
+        />
+        <datalist id={`employee-list-${index}`}>
           {employees.map((emp) => (
-            <option key={emp.emp_no} value={emp.name}>
-              {emp.name}
-            </option>
+            <option key={emp.emp_no} value={emp.name} />
           ))}
-        </select>
+        </datalist>
       </td>
+
 
       {/* Trade Dropdown */}
       <td>

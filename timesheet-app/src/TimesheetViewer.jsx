@@ -54,7 +54,7 @@ const TimesheetViewer = () => {
               {ts.entries.map((entry) => (
                 <tr key={entry.id}>
                   <td>{entry.employee_name || entry.employee_id}</td>
-                  <td>{entry.trade_name || entry.trade_id}</td>
+                  <td>{entry.trade_name || (entry.trade_id ? entry.trade_id : "Not Assigned")}</td>
                   <td>{entry.from_time}</td>
                   <td>{entry.to_time}</td>
                   <td>{entry.break_minutes}</td>

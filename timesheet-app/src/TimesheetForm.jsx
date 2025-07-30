@@ -129,16 +129,16 @@ useEffect(() => {
     .filter((r) => r.name && r.from && r.to)
     .map((r) => ({
       employee_emp_no: getEmployeeId(r.name), // ✅ Correct field name
-      trade_id: getTradeId(r.trade),          // ✅ Must be added
+      trade_id: r.trade ? getTradeId(r.trade) : undefined, // ✅ Must be added
       from_time: r.from,
       to_time: r.to,
-      break_minutes: parseInt(r.breakM || 0),
+      break_minutes: (parseInt(r.breakH || 0) * 60) + parseInt(r.breakM || 0),
       total_hours: parseFloat(r.total || 0),
       remarks: r.remarks || ""
     }))
 
     };
-
+    console.log("Submitting payload:", formatted); // ✅ LOG HERE
     try {
       const response = await fetch("http://127.0.0.1:8000/timesheets", {
         method: "POST",

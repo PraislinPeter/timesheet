@@ -29,7 +29,7 @@ class TimesheetEntry(Base):
     id = Column(Integer, primary_key=True)
     timesheet_id = Column(Integer, ForeignKey("timesheets.id", ondelete="CASCADE"), nullable=False)
     employee_emp_no = Column(String(20), ForeignKey("employees.emp_no"), nullable=False)
-    trade_id = Column(Integer, ForeignKey("trades.id"), nullable=False)
+    trade_id = Column(Integer, ForeignKey("trades.id"), nullable=True)
     from_time = Column(Time, nullable=False)
     to_time = Column(Time, nullable=False)
     break_minutes = Column(Integer, default=0)
