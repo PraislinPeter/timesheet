@@ -1,0 +1,8 @@
+@import "react-datepicker/dist/react-datepicker.css";
+
+.react-datepicker__time-list-item {
+  font-size: 18px;  /* 👈 Increase this as needed */
+  padding: 8px 12px;
+}
+
+
