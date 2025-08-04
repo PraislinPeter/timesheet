@@ -6,6 +6,7 @@ import TimesheetReport from "./TimesheetReport";
 import TimesheetManager from "./TimesheetManager";
 import TimesheetViewer from "./TimesheetViewer";
 import TimesheetDetail from "./TimesheetDetail";
+import SalarySheet from "./SalarySheet";
 import './App.css';
 
 const App = () => {
@@ -15,7 +16,7 @@ const App = () => {
       <div style={{ marginLeft: "300px", padding: "20px", width: "100%" }}>
         <Routes>
           <Route path="/" element={<TimesheetForm />} />
-          <Route path="/salary" element={<div>Salary view coming soon</div>} />
+          <Route path="/salary" element={<SalarySheet />} />
           <Route path="/total-hours" element={<TimesheetReport />} />
           <Route path="/manage-timesheets" element={<TimesheetManager />} />
           <Route path="/timesheet/:id" element={<TimesheetDetail />} />
