@@ -4,34 +4,41 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { useNavigate, useLocation } from "react-router-dom"; 
+import { useNavigate, useLocation } from "react-router-dom";
 
 const TimesheetReport = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [reportData, setReportData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]); // ✅ holds only OT=YES
   const [error, setError] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Load saved dates from session
   useEffect(() => {
     const storedStart = sessionStorage.getItem("reportStartDate");
     const storedEnd = sessionStorage.getItem("reportEndDate");
-  
     if (!startDate && storedStart) setStartDate(new Date(storedStart));
     if (!endDate && storedEnd) setEndDate(new Date(storedEnd));
   }, []);
+
+  // Save dates to session
   useEffect(() => {
     if (startDate) sessionStorage.setItem("reportStartDate", startDate.toISOString());
   }, [startDate]);
-  
+
   useEffect(() => {
     if (endDate) sessionStorage.setItem("reportEndDate", endDate.toISOString());
   }, [endDate]);
+
+  // Auto-fetch when both dates are set
   useEffect(() => {
     if (startDate && endDate) {
-      fetchReport(); // ✅ automatically fetches data when both dates are ready
+      fetchReport();
     }
-  }, [startDate, endDate]);  
-  const navigate = useNavigate();
+  }, [startDate, endDate]);
+
   const formatToApi = (date) => format(date, "yyyy-MM-dd");
   const formatDisplayDate = (date) => format(new Date(date), "dd-MMM-yy");
 
@@ -42,7 +49,6 @@ const TimesheetReport = () => {
       setError("Both dates are required.");
       return;
     }
-
     if (startDate > endDate) {
       setError("Start date cannot be after end date.");
       return;
@@ -53,19 +59,24 @@ const TimesheetReport = () => {
     try {
       const res = await fetch(url);
       const data = await res.json();
+
       setReportData(data);
+      // ✅ Filter OT=YES here (case-insensitive)
+      const onlyYes = (data || []).filter(e => String(e.OT || "").toUpperCase() === "YES");
+      setFilteredData(onlyYes);
     } catch (err) {
       console.error("Failed to fetch report", err);
       setReportData([]);
+      setFilteredData([]);
     }
   };
 
   const exportToExcel = () => {
-    if (reportData.length === 0) return;
+    if (filteredData.length === 0) return;
 
-    const allDates = Object.keys(reportData[0].entries_by_date).sort();
+    const allDates = Object.keys(filteredData[0].entries_by_date).sort();
 
-    const exportRows = reportData.map((emp, idx) => {
+    const exportRows = filteredData.map((emp, idx) => {
       const row = {
         "SL NO.": idx + 1,
         "STAFF NAME": emp.employee_name,
@@ -90,12 +101,12 @@ const TimesheetReport = () => {
   };
 
   const handleView = (timesheetIds) => {
-    navigate("/timesheets/view", { state: { ids: timesheetIds } }); // ✅ Use the argument passed in
+    navigate("/timesheets/view", { state: { ids: timesheetIds } });
   };
-  
+
   const allDates =
-    reportData.length > 0
-      ? Object.keys(reportData[0].entries_by_date).sort()
+    filteredData.length > 0
+      ? Object.keys(filteredData[0].entries_by_date).sort()
       : [];
 
   return (
@@ -136,7 +147,11 @@ const TimesheetReport = () => {
                 <button className="btn btn-primary" onClick={fetchReport}>
                   Go
                 </button>
-                <button className="btn btn-success" onClick={exportToExcel} disabled={reportData.length === 0}>
+                <button
+                  className="btn btn-success"
+                  onClick={exportToExcel}
+                  disabled={filteredData.length === 0}
+                >
                   Export to Excel
                 </button>
               </div>
@@ -169,12 +184,12 @@ const TimesheetReport = () => {
               </tr>
             </thead>
             <tbody>
-              {reportData.length === 0 ? (
+              {filteredData.length === 0 ? (
                 <tr>
                   <td colSpan={allDates.length + 6}>No data available</td>
                 </tr>
               ) : (
-                reportData.map((emp, index) => (
+                filteredData.map((emp, index) => (
                   <tr key={index}>
                     <td>{index + 1}</td>
                     <td>{emp.employee_name}</td>
@@ -185,7 +200,6 @@ const TimesheetReport = () => {
                     {allDates.map((date) => {
                       const entry = emp.entries_by_date[date];
                       const day = new Date(date).getDay();
-                      const isWeekday = day >= 1 && day <= 5;
                       const isSunday = day === 0;
 
                       return (
@@ -198,13 +212,12 @@ const TimesheetReport = () => {
                             >
                               {entry.total_hours} hrs
                             </button>
-                          ) : day === 0 ? ( // Sunday
+                          ) : isSunday ? (
                             <span style={{ color: "#999" }}>-</span>
                           ) : (
                             <span style={{ color: "red", fontWeight: "bold" }}>A</span>
                           )}
                         </td>
-
                       );
                     })}
                   </tr>
@@ -219,12 +232,3 @@ const TimesheetReport = () => {
 };
 
 export default TimesheetReport;
-
-
-
-
-// The redirection to TimesheetDetails.jsx happens in the `handleView` function.
-// It uses `navigate` to redirect to the "/timesheets/view" route and passes the timesheet IDs as state.
-// The routes are typically defined in a central routing file, such as `App.jsx` or `Routes.jsx`,
-// using a library like `react-router-dom`. Look for a file where `<Routes>` and `<Route>` components are used.
-

@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Annotated
+from pydantic import BaseModel, Field, validator
+from typing import List, Optional, Annotated, Literal
+from decimal import Decimal
 from datetime import date, time
+
 
 # Input model for a timesheet entry
 class TimesheetEntryIn(BaseModel):
@@ -24,14 +26,20 @@ class TimesheetIn(BaseModel):
     for_company: str
     entries: List[TimesheetEntryIn]
 
-# Output model for an employee (without trade string now)
 class EmployeeOut(BaseModel):
     emp_no: str
     name: str
-    base_pay: float
+    DOJ: date
+    base_pay: Optional[Decimal]
+    Food_All: Optional[Decimal]
+    WS_Allowance: Optional[Decimal]
+    HRA: Optional[Decimal]
+    SPL_Allown: Optional[Decimal]
+    Fixed_OT: Optional[Decimal]
+    OT: Literal['YES', 'NO']
 
     class Config:
-        orm_mode = True
+        from_attributes = True 
 
 # Output for reporting summaries
 class ReportOut(BaseModel):
@@ -100,11 +108,81 @@ class TradeOut(BaseModel):
     class Config:
         orm_mode = True
 
+class AttendanceItemIn(BaseModel):
+    emp_no: str
+    status: str = Field(pattern="^(P|A|AL|EL|ML)$")
+    notes: Optional[str] = ""
 
+class AttendanceBulkIn(BaseModel):
+    date: date
+    records: List[AttendanceItemIn]
 
+class AttendanceItemOut(BaseModel):
+    emp_no: str
+    att_date: date
+    status: str
+    notes: Optional[str] = ""
 
+class AdvanceCreateIn(BaseModel):
+    emp_no: str = Field(..., example="AMC 5001")
+    amount: float = Field(..., gt=0, example=5000.0)
+    monthly_installment: float = Field(..., gt=0, example=500.0)
+    ts: date = Field(default_factory=date.today, example="2025-08-15")
+    note: Optional[str] = Field(default="Advance given")
 
+class AdvanceCreateOut(BaseModel):
+    message: str
+    emp_no: str
+    advance_amount: float
+    monthly_installment: float
+    payment_inserted: bool
+    balance: float
 
+class PaymentUpdateIn(BaseModel):
+    amount: float = Field(..., description="New payment amount (<= 0). Use 0 to defer.")
+    note: Optional[str] = None
 
+    @validator("amount")
+    def must_be_zero_or_negative(cls, v):
+        if v > 0:
+            raise ValueError("Payment amount must be <= 0 (use 0 to defer).")
+        return v
 
+class PaymentUpdateOut(BaseModel):
+    message: str
+    emp_no: str
+    ym: str
+    amount: float
+    deferred: bool
+    balance: float
 
+class IncreaseAdvanceIn(BaseModel):
+    emp_no: str = Field(..., example="AMC 5001")
+    amount: float = Field(..., gt=0, example=1500.0)
+    ts: date = Field(default_factory=date.today, example="2025-08-20")
+    note: Optional[str] = Field(default="Advance increased")
+
+class IncreaseAdvanceOut(BaseModel):
+    message: str
+    emp_no: str
+    amount: float
+    balance: float
+
+class InstallmentUpdateIn(BaseModel):
+    monthly_installment: float = Field(..., gt=0, example=800.0)
+    ym: Optional[str] = Field(default=None, example="2025-08")  # which month to apply
+    apply_to_month: bool = Field(default=True)
+    note: Optional[str] = Field(default="Installment changed")
+
+class InstallmentUpdateOut(BaseModel):
+    message: str
+    emp_no: str
+    monthly_installment: float
+    ym: str
+    payment_adjusted: bool
+    balance: float
+
+class BalanceOut(BaseModel):
+    emp_no: str
+    balance: float
+    monthly_installment: Optional[float] = 0.0

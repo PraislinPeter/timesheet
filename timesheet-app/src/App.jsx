@@ -7,7 +7,12 @@ import TimesheetManager from "./TimesheetManager";
 import TimesheetViewer from "./TimesheetViewer";
 import TimesheetDetail from "./TimesheetDetail";
 import SalarySheet from "./SalarySheet";
+import AttendanceSheet from "./attendance";
+import AttendanceViewer from "./AttendanceViewer";
 import './App.css';
+import AttendanceHome from "./AttendanceHome";
+import JobHoursReport from "./jobhours";
+import AdvanceAdmin from "./AdvanceAdmin"; // ✅ NEW
 
 const App = () => {
   return (
@@ -21,12 +26,14 @@ const App = () => {
           <Route path="/manage-timesheets" element={<TimesheetManager />} />
           <Route path="/timesheet/:id" element={<TimesheetDetail />} />
           <Route path="/timesheets/view" element={<TimesheetViewer />} />
-
+          <Route path="/attendance/add" element={<AttendanceSheet />} />
+          <Route path="/attendance/view" element={<AttendanceViewer />} />
+          <Route path="/attendance" element={<AttendanceHome />} />
+          <Route path="/job-hours" element={<JobHoursReport />} />
++         <Route path="/advances" element={<AdvanceAdmin />} /> {/* ✅ NEW */}
         </Routes>
       </div>
     </div>
   );
 };
 export default App;
-
-
